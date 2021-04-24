@@ -1,0 +1,4 @@
+1. payment can be done through a payment gateway
+2. each city will have unique theater name
+3. Any seat maintenance and screen maintenance is not considered.
+4. 1 show running in a screen per day.
