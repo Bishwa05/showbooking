@@ -1,0 +1,42 @@
+package com.discovery.theater.processor;
+
+import org.springframework.batch.core.listener.JobExecutionListenerSupport;
+import org.springframework.stereotype.Component;
+
+import com.discovery.theater.batch.Theater;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.listener.JobExecutionListenerSupport;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+public class JobCompletionNotificationListener  extends JobExecutionListenerSupport {
+	  private static final Logger log = LoggerFactory.getLogger(JobCompletionNotificationListener.class);
+
+	  private final JdbcTemplate jdbcTemplate;
+
+	  @Autowired
+	  public JobCompletionNotificationListener(JdbcTemplate jdbcTemplate) {
+	    this.jdbcTemplate = jdbcTemplate;
+	  }
+
+	  @Override
+	  public void afterJob(JobExecution jobExecution) {
+	    if(jobExecution.getStatus() == BatchStatus.COMPLETED) {
+	      log.info("!!! JOB FINISHED! Time to verify the results");
+
+	      jdbcTemplate.query("SELECT theaterName, city, totalScreen, isMaintainance FROM Theater",
+	        (rs, row) -> new Theater(
+	        rs.getString(1),
+	          rs.getString(2),		
+	          rs.getInt(3),
+	          rs.getString(4).charAt(0))
+	      ).forEach(theater -> log.info("Found <" + theater + "> in the database."));
+	    }
+	  }
+}
